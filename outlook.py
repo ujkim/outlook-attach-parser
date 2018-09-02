@@ -7,10 +7,11 @@ import email.mime.multipart
 import config
 import base64
 import io, os
+from config import *
 
 class Outlook():
     def __init__(self):
-        mydate = datetime.datetime.now()-datetime.timedelta(7)
+        mydate = datetime.datetime.now()-datetime.timedelta(6)
         self.today = mydate.strftime("%d-%b-%Y")
         self.attachmentFileList = list()
         # self.imap = imaplib.IMAP4_SSL('imap-mail.outlook.com')
@@ -71,7 +72,7 @@ class Outlook():
                 continue
             break
 
-    def saveAttachments(self, strParser, mailContents):
+    def getAttachmentList(self, strParser, mailContents):
         try:
             for part in mailContents.walk():
                 if part.get_content_maintype() == 'multipart':
@@ -79,18 +80,44 @@ class Outlook():
                 if part.get('Content-Disposition') is None:
                     continue
                 filename = strParser.get_decoded_mail_contents(part.get_filename())
-                att_path = os.path.join("/tmp", filename)
                 self.attachmentFileList.append(filename)
-                if not os.path.isfile(att_path):
-                    fp = open(att_path, 'wb')
-                    fp.write(part.get_payload(decode=True))
-                    fp.close()
+        except OSError as e:
+            print("get Mail attachments file list, %s" % e)
+        return self.attachmentFileList
+
+    def saveAttachments(self, att_path, part):
+        try:
+            if not os.path.isfile(att_path):
+                fp = open(att_path, 'wb')
+                fp.write(part.get_payload(decode=True))
+                fp.close()
+            else:
+                return False
+        except OSError as e:
+            print("write function error %s" % e)
+        return True
+
+    # divided with Munji, Junmin, Etc, downloading attachmentfiles
+    def saveAlongMunjiJunmin(self, strParser, mailContents):
+        try:
+            saveFlag = False
+            for part in mailContents.walk():
+                if part.get_content_maintype() == 'multipart':
+                    continue
+                if part.get('Content-Disposition') is None:
+                    continue
+                filename = strParser.get_decoded_mail_contents(part.get_filename())
+                if "문지동" in filename:
+                    att_path = os.path.join(MUNJIURL, filename)
+                elif "전민동" in filename:
+                    att_path = os.path.join(JUNMINURL, filename)
                 else:
-                    print("attachment file not exists, %s" % (att_path))
-                    return False
+                    att_path = os.path.join(ETCURL, filename)
+                saveFlag = self.saveAttachments(att_path, part)
+            return saveFlag
         except OSError as e:
             print("saveAttachment Error %s" % e)
-        return True
+        return saveFlag
 
     def attachmentList(self):
         return self.attachmentFileList

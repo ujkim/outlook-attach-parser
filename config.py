@@ -12,3 +12,6 @@ smtp_port = 587
 # outlook account
 address = "Outlook_ID_Address"
 password = "Password"
+MUNJIURL = "/MUNJI/"
+JUNMINURL = "/JUNMIN/"
+ETCURL = "/ETC/"

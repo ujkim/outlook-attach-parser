@@ -1,4 +1,4 @@
-
+#-*- coding: utf-8 -*-
 import base64
 import re, os
 import quopri
@@ -17,6 +17,8 @@ class strParser(listController):
 			byte_string = base64.b64decode(encoded_text)
 		elif encoding is 'Q' or encoding is 'q':
 			byte_string = quopri.decodestring(encoded_text)
+		if 'utf-8' in charset:	#added to utf-8 decoding error exception
+			return byte_string.decode(encoding=charset, errors='ignore')
 		return byte_string.decode(charset)
 
 	# remove key in words	
